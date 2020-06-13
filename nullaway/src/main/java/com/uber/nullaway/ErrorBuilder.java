@@ -135,11 +135,11 @@ public class ErrorBuilder {
     switch (errorMessage.messageType) {
       case DEREFERENCE_NULLABLE:
       case RETURN_NULLABLE:
-        builder = addReturnNullableFix(suggestTree, builder);
+        builder = addReturnNullableFix(suggestTree, builder); //Zifei add suggested fix for RETURN_NULLABLE
         break;
       case PASS_NULLABLE:
         //String s="";
-        builder = addPassNullableFix(suggestTree,builder,state);
+        builder = addPassNullableFix(suggestTree,builder,state);  //Zifei add suggested fix for PASS_NULLABLE
         //ImmutableList<Fix> f=builder.build().fixes;
         //for(int i=0;i<f.size();i++){
         //  s+=f.get(i).toString()+"/";
@@ -174,11 +174,13 @@ public class ErrorBuilder {
     }
     return builder;
   }
-
+  // Zifei This is the function that generate suggested fix for pass nullable.
+  // Zifei If we pass a nullable parameter to a function where the declaration of the parameter is nonnull, it would change it to nullable.
   Description.Builder addPassNullableFix(Tree suggestTree, Description.Builder builder,VisitorState state){
-    Symbol dereferenced = methodSymbol;
-    Tree paramDecl = findParamDeclaration(state,dereferenced);
-    if(paramDecl==null) return null;// TODO: 4/23/2020 check is it good
+    Symbol dereferenced = methodSymbol; // Zifei The methodSymbol field would collect the method symbol from NullAway.java
+    Tree paramDecl = findParamDeclaration(state,dereferenced);  // Zifei Get the tree node which represents the declaration of the parameter
+    if(paramDecl==null) return null;
+    // Zifei Similar work to the addReturnNullableFix
     SuggestedFix fix;
     final ModifiersTree modifiers =
             (paramDecl instanceof MethodTree)
@@ -203,14 +205,17 @@ public class ErrorBuilder {
     return builder.addFix(fix);
   }
 
+  // Zifei It would find the declaration of the parameter based on the symbol and the position of the parameter
   Tree findParamDeclaration(VisitorState state, Symbol parameter){
     MethodTree methodTree = (MethodTree)getTreesInstance(state).getTree(parameter);
-    Tree paramTree=methodTree.getParameters().get(paramPos);
+    Tree paramTree=methodTree.getParameters().get(paramPos);  // Zifei paramPos is the field that collect the position of the parameter from NullAway.java
     //paramTree.toString();
     //throw new AssertionError(paramTree.getKind().toString());
     return paramTree;
   }
 
+  // Zifei This is the function that generate suggested fix for return nullable
+  // Zifei If a function is returning a nullable value, we would put the "Nullable" annotation to it's declaration
   Description.Builder addReturnNullableFix(Tree suggestTree, Description.Builder builder){
     SuggestedFix fix;
     final ModifiersTree modifiers =
@@ -219,20 +224,24 @@ public class ErrorBuilder {
                     : ((VariableTree) suggestTree).getModifiers();
     final List<? extends AnnotationTree> annotations = modifiers.getAnnotations();
     // noinspection ConstantConditions
+    // Zifei Get the original annotation
     com.google.common.base.Optional<? extends AnnotationTree> nonNullAnnot =
             Iterables.tryFind(
                     annotations,
                     annot -> annot.getAnnotationType().toString().endsWith("Nonnull"));
     if(!nonNullAnnot.isPresent()){
+      // Zifei If there isn't a "Nonnull" annotation, simply add "Nullable" annotation
       fix =
               SuggestedFix.prefixWith(
                       suggestTree,
                       "@Nullable ");
 
     }else{
+      // Zifei If there is a "Nonnull" annotation, repalce it with "Nuallble" annotation
        final String replacement = "@Nullable";
        fix = SuggestedFix.replace(nonNullAnnot.get(), replacement);
     }
+    // Zifei Return builder with the suggested fix
     return builder.addFix(fix);
   }
 
