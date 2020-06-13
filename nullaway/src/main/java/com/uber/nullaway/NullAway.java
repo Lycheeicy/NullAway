@@ -1354,6 +1354,7 @@ public class NullAway extends BugChecker
       Tree formal = null;
       ExpressionTree actual = null;
       boolean mayActualBeNull = false;
+      // Zifei Get the methodTree node for the declaration of the called method
       MethodTree methodTree = (MethodTree)getTreesInstance(state).getTree(methodSymbol);
       if (argPos == formalParams.size() - 1 && methodSymbol.isVarArgs()) {
         // Check all vararg actual arguments for nullability
@@ -1363,6 +1364,7 @@ public class NullAway extends BugChecker
         for (ExpressionTree arg : actualParams.subList(argPos, actualParams.size())) {
           actual = arg;
           if(methodTree!=null)
+            // Zifei Get the tree node of the parameter
             formal=methodTree.getParameters().get(argPos);
           mayActualBeNull = mayBeNullExpr(state, actual);
           if (mayActualBeNull) {
@@ -1372,6 +1374,7 @@ public class NullAway extends BugChecker
       } else {
         actual = actualParams.get(argPos);
         if(methodTree!=null)
+          // Zifei Get the tree node of the parameter
           formal=methodTree.getParameters().get(argPos);
         mayActualBeNull = mayBeNullExpr(state, actual);
       }
@@ -1383,6 +1386,7 @@ public class NullAway extends BugChecker
             "passing @Nullable parameter '"
                 + state.getSourceForNode(actual)
                 + "' where @NonNull is required";
+        // Zifei Pass the method symbol and the parameter position to errorBuilder
         errorBuilder.methodSymbol=methodSymbol;
         errorBuilder.paramPos=argPos;
         // do state.reportmatch
